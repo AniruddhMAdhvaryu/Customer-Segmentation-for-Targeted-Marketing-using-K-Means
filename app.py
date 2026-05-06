@@ -144,6 +144,9 @@ def main():
     st.markdown("Discover actionable insights from customer behavior using machine learning and K-Means clustering. "
                 "Adjust settings in the sidebar to see real-time updates.")
     
+    # Placeholder for prediction results so they appear at the top
+    prediction_placeholder = st.empty()
+    
     # Load and process data
     with st.spinner("Loading and processing data..."):
         time.sleep(0.4) # Simulate loading for visual polish
@@ -240,8 +243,7 @@ def main():
         
     with tab3:
         st.markdown("### Clustered Dataset")
-        st.dataframe(df_clustered.style.background_gradient(cmap='viridis', subset=['annual_income', 'spending_score']), 
-                     width="stretch")
+        st.dataframe(df_clustered, width="stretch")
         
         # Download button
         csv = df_clustered.to_csv(index=False).encode('utf-8')
@@ -287,27 +289,28 @@ def main():
         predicted_cluster = kmeans.predict(scaled_input)[0]
         distances = kmeans.transform(scaled_input)[0]
         
-        st.balloons()
-        st.markdown("---")
-        st.success(f"### Prediction Result: **Cluster {predicted_cluster}**")
-        st.write(f"Based on the input profile, the new customer aligns with the behaviors of **Cluster {predicted_cluster}**.")
-        st.write("Review the Insights Panel in the 'Cluster Visualization' tab to understand this cluster's characteristics and suggested marketing approaches.")
-        
-        st.markdown("#### Prediction Confidence (Distances to Cluster Centers)")
-        st.write("Lower distance indicates higher similarity to the cluster profile.")
-        dist_df = pd.DataFrame({'Cluster': [f'Cluster {i}' for i in range(k)], 'Distance': distances})
-        dist_df = dist_df.sort_values('Distance')
-        
-        fig_dist = px.bar(
-            dist_df,
-            x='Cluster',
-            y='Distance',
-            title='Distance to Each Cluster Center (Lower is Closer)',
-            template='plotly_white',
-            color='Distance',
-            color_continuous_scale='Blues'
-        )
-        st.plotly_chart(fig_dist, use_container_width=True)
+        with prediction_placeholder.container():
+            st.balloons()
+            st.success(f"### Prediction Result: **Cluster {predicted_cluster}**")
+            st.write(f"Based on the input profile, the new customer aligns with the behaviors of **Cluster {predicted_cluster}**.")
+            st.write("Review the Insights Panel in the 'Cluster Visualization' tab to understand this cluster's characteristics.")
+            
+            st.markdown("#### Prediction Confidence (Distances to Cluster Centers)")
+            dist_df = pd.DataFrame({'Cluster': [f'Cluster {i}' for i in range(k)], 'Distance': distances})
+            dist_df = dist_df.sort_values('Distance')
+            
+            fig_dist = px.bar(
+                dist_df,
+                x='Cluster',
+                y='Distance',
+                title='Distance to Each Cluster Center (Lower is Closer)',
+                template='plotly_white',
+                color='Distance',
+                color_continuous_scale='Blues',
+                height=300
+            )
+            st.plotly_chart(fig_dist, width="stretch")
+            st.markdown("---")
 
 if __name__ == "__main__":
     main()
